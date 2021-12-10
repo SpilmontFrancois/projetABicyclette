@@ -16,7 +16,7 @@
         <pression>
             <level val="niveau_de_la_mer">99990</level>
         </pression>
-        <pluie interval="3h">0.2</pluie>
+        <pluie interval="3h">0.9</pluie>
         <pluie_convective interval="3h">0.1</pluie_convective>
         <humidite>
             <level val="2m">87.9</level>
