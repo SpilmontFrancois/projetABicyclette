@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:stylesheet version="1.0"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
     <xsl:output method="html" encoding="UTF-8" indent="yes" />
     <xsl:strip-space elements="*" />
 
@@ -21,37 +22,41 @@
     </xsl:template>
 
     <xsl:template match="echeance[1]">
-        <h3>
-            Température :
-        </h3>
-        <p>
-            <xsl:value-of select="format-number(temperature/level[2] - 273.15, '.00')" />
-            <xsl:text>°C</xsl:text>
-            <!-- K to C : -273,15 -->
-        </p>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Température</th>
+                    <th>Vent Moyen</th>
+                    <th>Pluie</th>
+                    <th>Humidité</th>
+                    <th>Risque de neige</th>
+                </tr>
+            </thead>
 
-        <h3>Vent moyen :</h3>
-        <p>
-            <xsl:value-of select="vent_moyen/level" />
-            <xsl:text> km/h</xsl:text>
-        </p>
-
-        <h3>Pluie :</h3>
-        <p>
-            <xsl:value-of select="pluie * 100" />
-            <xsl:text> %</xsl:text>
-        </p>
-
-        <h3>Humidité :</h3>
-        <p>
-            <xsl:value-of select="humidite/level" />
-            <xsl:text> %</xsl:text>
-        </p>
-
-        <h3>Risque de neige :</h3>
-        <p>
-            <xsl:value-of select="risque_neige" />
-        </p>
+            <tbody>
+                <tr>
+                    <td>
+                        <xsl:value-of select="format-number(temperature/level[2] - 273.15, '.00')" />
+                        <xsl:text> °C</xsl:text>
+                    </td>
+                    <td>
+                        <xsl:value-of select="vent_moyen/level" />
+                        <xsl:text> km/h</xsl:text>
+                    </td>
+                    <td>
+                        <xsl:value-of select="pluie * 100" />
+                        <xsl:text> %</xsl:text>
+                    </td>
+                    <td>
+                        <xsl:value-of select="humidite/level" />
+                        <xsl:text> %</xsl:text>
+                    </td>
+                    <td>
+                        <xsl:value-of select="risque_neige" />
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </xsl:template>
 
 </xsl:stylesheet>
