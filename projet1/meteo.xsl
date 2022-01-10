@@ -1,18 +1,26 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<xsl:stylesheet version="1.0"
-    xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
     <xsl:output method="html" encoding="UTF-8" indent="yes" />
     <xsl:strip-space elements="*" />
 
     <!-- On démarre de la racine -->
     <xsl:template match="/">
         <html lang="fr">
+            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css" integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ==" crossorigin="" />
+            <style type="text/css">
+                #map {
+                    /* la carte DOIT avoir une hauteur sinon elle n'apparaît pas */
+                    height: 70vh
+                }
+            </style>
             <head>
                 <title>A Bicyclette</title>
             </head>
             <body>
-                <h1>Projet A Bicyclette</h1>
-                <xsl:apply-templates />
+                <div>
+                    <h1>Projet A Bicyclette</h1>
+                    <xsl:apply-templates />
+                </div>
             </body>
         </html>
     </xsl:template>
@@ -105,7 +113,7 @@
                         </xsl:choose>
                     </td>
                     <td>
-                    <!-- A CHERCHER : BONNES CONDITIONS POUR CYCLISME -->
+                        <!-- A CHERCHER : BONNES CONDITIONS POUR CYCLISME -->
                         <xsl:choose>
                             <xsl:when test="(format-number(temperature/level[2] - 273.15, '.00') &gt; 10) and (risque_neige = 'non') and ((vent_moyen/level) &lt; 20) and (pluie &lt; 31)">
                                 <img src="./assets/icons/valide.png" alt="condition" />
