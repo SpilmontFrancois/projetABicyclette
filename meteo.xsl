@@ -73,16 +73,16 @@
                     </td>
                     <td>
                         <xsl:choose>
-                            <xsl:when test="(pluie * 100) &lt; 11">
+                            <xsl:when test="pluie &lt; 11">
                                 <img src="./assets/icons/pas_de_neige.png" alt="pluie" />
                             </xsl:when>
-                            <xsl:when test="(pluie * 100) &lt; 31">
+                            <xsl:when test="pluie &lt; 31">
                                 <img src="./assets/icons/nuage.png" alt="pluie" />
                             </xsl:when>
-                            <xsl:when test="((pluie * 100) &gt; 20) and ((pluie * 100) &lt; 61)">
+                            <xsl:when test="(pluie &gt; 20) and (pluie &lt; 61)">
                                 <img src="./assets/icons/pluie_legere.png" alt="pluie" />
                             </xsl:when>
-                            <xsl:when test="(pluie * 100) &gt; 60">
+                            <xsl:when test="pluie &gt; 60">
                                 <img src="./assets/icons/pluie_intense.png" alt="pluie" />
                             </xsl:when>
                         </xsl:choose>
@@ -107,7 +107,7 @@
                     <td>
                     <!-- A CHERCHER : BONNES CONDITIONS POUR CYCLISME -->
                         <xsl:choose>
-                            <xsl:when test="(format-number(temperature/level[2] - 273.15, '.00') &gt; 10) and (risque_neige = 'non') and ((vent_moyen/level) &lt; 20) and ((pluie * 100) &lt; 31)">
+                            <xsl:when test="(format-number(temperature/level[2] - 273.15, '.00') &gt; 10) and (risque_neige = 'non') and ((vent_moyen/level) &lt; 20) and (pluie &lt; 31)">
                                 <img src="./assets/icons/valide.png" alt="condition" />
                             </xsl:when>
                             <xsl:otherwise>
