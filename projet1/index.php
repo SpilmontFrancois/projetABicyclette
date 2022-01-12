@@ -24,33 +24,37 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
         // Récupération des stations
         $ipVeloStationURI = "http://www.velostanlib.fr/service/carto";
         $dataVeloStation = simplexml_load_string(file_get_contents($ipVeloStationURI))->markers;
-        $stations = array();
-        foreach ($dataVeloStation->marker as $station) {
-            $stations[] = array(
-                'number' => $station['number'],
-                'lat' => $station['lat'],
-                'lng' => $station['lng'],
-                'name' => $station['name'],
-                'address' => $station['address'],
-            );
+        if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
+            $stations = array();
+            foreach ($dataVeloStation->marker as $station) {
+                $stations[] = array(
+                    'number' => $station['number'],
+                    'lat' => $station['lat'],
+                    'lng' => $station['lng'],
+                    'name' => $station['name'],
+                    'address' => $station['address'],
+                );
+            }
+            // Récupération des disponibilités
+            $urlPlaces = "http://www.velostanlib.fr/service/stationdetails/nancy/";
+            $newTab = array();
+            foreach ($stations as $station) {
+                $data = simplexml_load_string(file_get_contents($urlPlaces . $station['number']));
+                if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
+                    $newTab[] = array(
+                        'number' => $station['number'],
+                        'lat' => $station['lat'],
+                        'lng' => $station['lng'],
+                        'name' => $station['name'],
+                        'address' => $station['address'],
+                        'bikes' => $data->available,
+                        'slots' => $data->free
+                    );
+                }
+            }
+            $jsonDataStations = json_encode($newTab);
         }
 
-        // Récupération des disponibilités
-        $urlPlaces = "http://www.velostanlib.fr/service/stationdetails/nancy/";
-        $newTab = array();
-        foreach ($stations as $station) {
-            $data = simplexml_load_string(file_get_contents($urlPlaces . $station['number']));
-            $newTab[] = array(
-                'number' => $station['number'],
-                'lat' => $station['lat'],
-                'lng' => $station['lng'],
-                'name' => $station['name'],
-                'address' => $station['address'],
-                'bikes' => $data->available,
-                'slots' => $data->free
-            );
-        }
-        $jsonDataStations = json_encode($newTab);
 
         if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
             echo "<br>";
