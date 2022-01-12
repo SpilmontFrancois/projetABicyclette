@@ -21,6 +21,7 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
 
         echo $proc->transformToXml($data);
 
+        // Récupération des stations
         $ipVeloStationURI = "http://www.velostanlib.fr/service/carto";
         $dataVeloStation = simplexml_load_string(file_get_contents($ipVeloStationURI))->markers;
         $stations = array();
@@ -34,6 +35,7 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
             );
         }
 
+        // Récupération des disponibilités
         $urlPlaces = "http://www.velostanlib.fr/service/stationdetails/nancy/";
         $newTab = array();
         foreach ($stations as $station) {
@@ -48,7 +50,7 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
                 'slots' => $data->free
             );
         }
-        $json = json_encode($newTab);
+        $jsonDataStations = json_encode($newTab);
 
         if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
             echo "<br>";
@@ -66,15 +68,27 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
                             minZoom: 14,
                             maxZoom: 17
                         }).addTo(myMap)
-                        L.marker([$geolocData->lat, $geolocData->lon]).addTo(myMap)
+
+                        const parkingIcon = L.icon({
+                            iconUrl: './assets/icons/parking-solid.svg',
+                            iconSize: [24, 24],
+                        });
+                        
                         // Par magie, ça marche SEULEMENT si on a ce console.log donc pas touche
-                        console.log($json);
-                        $json.forEach((el)=>{
-                           L.marker([el.lat[0], el.lng[0]]).addTo(myMap)
+                        console.log($jsonDataStations);
+                        $jsonDataStations.forEach((el)=>{
+                           L.marker([el.lat[0], el.lng[0]], { icon: parkingIcon }).addTo(myMap)
                            .bindPopup(
                                  "<b>" + el.name[0] + "</b><br>" + el.address[0] + "<br>" + el.bikes[0] + " vélos disponibles<br>" + el.slots[0] + " places disponibles"
                            )
                         })
+
+                        const userIcon = L.icon({
+                            iconUrl: './assets/icons/user-solid.svg',
+                            iconSize: [24, 24],
+                        });
+
+                        L.marker([$geolocData->lat, $geolocData->lon], { icon: userIcon }).addTo(myMap)
                     }
                     window.onload = function () {
                         initMap()
