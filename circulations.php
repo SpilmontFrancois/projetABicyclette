@@ -14,8 +14,47 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
 
     $urlApiCirculation = 'https://data.loire-atlantique.fr/api/records/1.0/search/?dataset=224400028_info-route-departementale&q=&lang=fr&rows=50';
     $dataCirculation = file_get_contents($urlApiCirculation);
-
     if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
+        $urlApiCovid = 'https://www.data.gouv.fr/fr/datasets/r/5c4e1452-3850-4b59-b11c-3dd51d7fb8b5';
+        $dataCovid = file_get_contents($urlApiCovid);
+        //echo $dataCovid;  // Ca rend bien l'api
+
+        function csvtojson($file, $delimiter)
+        {
+            if (($handle = fopen($file, "r")) === false) {
+                die("can't open the file.");
+            }
+
+            $csv_headers = fgetcsv($handle, 4000, $delimiter);
+            $csv_json = array();
+
+            while ($row = fgetcsv($handle, 20480, $delimiter)) {
+                $csv_json[] = array_combine($csv_headers, $row);
+            }
+
+            fclose($handle);
+            return json_encode($csv_json);
+        }
+
+        //$jsonresult = csvtojson($urlApiCovid, ",");
+
+        //echo $jsonresult;   // Ca transforme le CSV en JSON
+
+        function convertCSVtoJSON($file, $delimiter)
+        {
+            $data = file($file);
+            $json = array();
+
+            foreach ($data as $row) {
+                $json[] = explode($delimiter, $row);
+            }
+
+           // print_r($json);
+        }
+
+        convertCSVtoJSON($urlApiCovid, ",");
+
+
         $html = <<<HTML
             <h1 class="ms-2">Circulations</h1>
             <h2 class="ms-4">Carte des difficultés de circulation dans le département de la Loire Atlantique</h2>
@@ -26,7 +65,7 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
             <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
             <script>
                 function initMap() {
-                    myMap = L.map('map').setView([$lat, $lon], 10)
+                    myMap = L.map('map', { tap : false }).setView([$lat, $lon], 10)
                     L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
                         // Lien vers la source des données
                         attribution: 'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a>',
@@ -68,7 +107,18 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
                     });
                     
                     L.marker([$lat, $lon], { icon: townHallIcon }).addTo(myMap).bindPopup("<b>Mairie de Notre-Dame-des-Landes</b>")
+                }
 
+                function initCourbeCovid(){
+                    document.body.innerHTML += `
+                        <hr/>
+                        <div class='ms-2'>
+                            <h1>Données COVID</h1>
+                            
+                        </div>`
+                }
+
+                function initSources(){
                     const address = "<?php echo $address; ?>"
                         document.body.innerHTML += `
                         <hr/>
@@ -76,16 +126,22 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
                             <h2>Appels API :</h2>
                             <ul>
                                 <li>
-                                    <p>https://api-adresse.data.gouv.fr/search/?q=${address}</p>
+                                    <p>Adresse de la Mairie : <a href="https://api-adresse.data.gouv.fr/search/?q=${address}">https://api-adresse.data.gouv.fr/search/?q=${address}</a></p>
                                 </li>
                                 <li>
-                                    <p>https://data.loire-atlantique.fr/api/records/1.0/search/?dataset=224400028_info-route-departementale&q=&lang=fr&rows=50</p>
+                                    <p>Infos routière de la Loire Atlantique : <a href="https://data.loire-atlantique.fr/api/records/1.0/search/?dataset=224400028_info-route-departementale&q=&lang=fr&rows=50">https://data.loire-atlantique.fr/api/records/1.0/search/?dataset=224400028_info-route-departementale&q=&lang=fr&rows=50</a></p>
+                                </li>
+                                <li>
+                                    <p><a href="">Données COVID</a></p>
                                 </li>
                             </ul>
                         </div>`
                 }
+
                 window.onload = function () {
                     initMap()
+                    initCourbeCovid()
+                    initSources()
                 }
             </script>
         HTML;
