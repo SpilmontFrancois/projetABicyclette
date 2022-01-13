@@ -17,9 +17,12 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
     // $dataCirculation = json_decode($dataCirculation);
 
     $html = <<<HTML
-            <div id="map" style="height: 70vh">
+            <h1 class="ms-2">Circulations</h1>
+            <h2 class="ms-4">Carte des difficultés de circulation dans le département de la Loire Atlantique</h2>
+            <div id="map" style="height: 70vh" class="ms-5 w-75">
             </div>
             <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css" integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ==" crossorigin="" />
+            <link rel="stylesheet" href="./bootstrap.css" />
             <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js" integrity="sha512-/Nsx9X4HebavoBvEBuyp3I7od5tA0UzAxs+j83KgC8PU0kgB4XiK4Lfe4y4cgBtaRJQEIFCW+oC506aPT2L1zw==" crossorigin=""></script>
             <script>
                 function initMap() {
@@ -57,7 +60,7 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
                         .bindPopup(
                               "<b>" + el.fields.nature + "</b><br>" + "Publié le : " + el.fields.datepublication + "<br/>" + el.fields.ligne1 + "<br>" + el.fields.ligne2 + "<br>" + el.fields.ligne3 + "<br>" + el.fields.ligne4
                         )
-                   })
+                    })
 
                     const townHallIcon = L.icon({
                         iconUrl: './assets/icons/landmark-solid.svg',
@@ -65,6 +68,21 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
                     });
                     
                     L.marker([$lat, $lon], { icon: townHallIcon }).addTo(myMap).bindPopup("<b>Mairie de Notre-Dame-des-Landes</b>")
+
+                    const address = "<?php echo $address; ?>"
+                        document.body.innerHTML += `
+                        <hr/>
+                        <div class='ms-2'>
+                            <h2>Appels API :</h2>
+                            <ul>
+                                <li>
+                                    <p>https://api-adresse.data.gouv.fr/search/?q=${address}</p>
+                                </li>
+                                <li>
+                                    <p>https://data.loire-atlantique.fr/api/records/1.0/search/?dataset=224400028_info-route-departementale&q=&lang=fr&rows=50</p>
+                                </li>
+                            </ul>
+                        </div>`
                 }
                 window.onload = function () {
                     initMap()

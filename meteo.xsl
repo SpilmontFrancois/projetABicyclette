@@ -10,9 +10,11 @@
                 <title>A Bicyclette</title>
             </head>
             <body>
-                <div>
-                    <h1>Projet A Bicyclette</h1>
+                <div id="conditions">
+                    <h1 class="ms-2">Projet A Bicyclette</h1>
+                    <h2 class="ms-4">Conditions météo</h2>
                     <xsl:apply-templates />
+                    <hr/>
                 </div>
             </body>
         </html>
@@ -23,7 +25,7 @@
     </xsl:template>
 
     <xsl:template match="echeance[1]">
-        <table border="1">
+        <table class="table table-bordered ms-5 w-75">
             <thead>
                 <tr>
                     <th>Température</th>
