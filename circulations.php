@@ -1,13 +1,21 @@
 <?php
 stream_context_set_default(array('http' => array('proxy' => 'tcp://www-cache:3128', 'request_fulluri' => true), 'ssl' => array('verify_peer' => false, 'verify_peer_name' => false)));
 
-function convertCSVtoJSON($file, $delimiter)
+$urlIpAPI = "http://ip-api.com/xml/?lang=fr";
+$ip = simplexml_load_string(file_get_contents($urlIpAPI))->query;
+
+$urlCodePostal = "http://ip-api.com/json/" . $ip . "?fields=66842623";
+$codePostal = json_decode(file_get_contents($urlCodePostal))->zip;
+
+function convertCSVtoJSON($file, $delimiter, $codePostal)
 {
     $data = file($file);
     $json = array();
 
     foreach ($data as $row) {
-        $json[] = explode($delimiter, $row);
+        if ($row[0] . $row[1] === $codePostal[0] . $codePostal[1]) {
+            $json[] = explode($delimiter, $row);
+        }
     }
 
     return json_encode($json);
@@ -31,7 +39,7 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
         $dataCovid = file($urlApiCovid);
 
         if ($http_response_header[0] === 'HTTP/1.1 302 FOUND') {
-            $jsonConverted = convertCSVtoJSON($urlApiCovid, ",");
+            $jsonConverted = convertCSVtoJSON($urlApiCovid, ",", $codePostal);
         } else {
             echo "Erreur lors de l'accès aux données COVID";
         }
@@ -113,12 +121,10 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
                     let data = [[], [], []]
                     let labels = []
                     json.forEach((elem) => {
-                        if (elem[0] === '01') {
-                            data[0].push(elem[6])
-                            data[1].push(elem[9])
-                            data[2].push(elem[12])
-                            labels.push(elem[1])
-                        }
+                        data[0].push(elem[6])
+                        data[1].push(elem[9])
+                        data[2].push(elem[12])
+                        labels.push(elem[1])
                     })
                     Chart.defaults.font.size = 30;
 
