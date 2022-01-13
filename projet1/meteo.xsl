@@ -6,12 +6,6 @@
     <!-- On démarre de la racine -->
     <xsl:template match="/">
         <html lang="fr">
-            <style type="text/css">
-                #map {
-                    /* la carte DOIT avoir une hauteur sinon elle n'apparaît pas */
-                    height: 70vh
-                }
-            </style>
             <head>
                 <title>A Bicyclette</title>
             </head>
