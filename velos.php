@@ -1,5 +1,20 @@
 <?php
-//stream_context_set_default(array('http' => array('proxy' => 'tcp://www-cache:3128', 'request_fulluri' => true)));
+stream_context_set_default(array('http' => array('proxy' => 'tcp://www-cache:3128', 'request_fulluri' => true), 'ssl' => array('verify_peer' => false, 'verify_peer_name' => false)));
+
+function sky_curl_get_file_contents($URL)
+{
+    $c = curl_init();
+    curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($c, CURLOPT_URL, $URL);
+    curl_setopt($c, CURLOPT_PROXY, 'tcp://www-cache:3128');
+    $contents = curl_exec($c);
+    curl_close($c);
+    if ($contents) :
+        return $contents;
+    else :
+        return false;
+    endif;
+}
 
 // Récupération des données de géolocalisation
 $ipGeoloc = "http://ip-api.com/xml/?lang=fr";
@@ -56,31 +71,38 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
         }
 
         if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
+            // Récupération de la qualité de l'air
             $urlQualiteAir = "https://services3.arcgis.com/Is0UwT37raQYl9Jj/arcgis/rest/services/ind_grandest/FeatureServer/0/query?where=lib_zone%3D%27Nancy%27&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=true&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=";
-            $dataAir = file_get_contents($urlQualiteAir);
+            $dataAir = sky_curl_get_file_contents($urlQualiteAir);
 
-            $urlApi = 'https://api-adresse.data.gouv.fr/search/?q=';
-            $address = "IUT Nancy-Charlemagne";
-            $urlApi = $urlApi . str_replace(' ', '+', $address);
-            $geocode = file_get_contents($urlApi);
             if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
-                $output = json_decode($geocode);
-                $lon = $output->features[0]->geometry->coordinates[0];
-                $lat = $output->features[0]->geometry->coordinates[1];
+                // Récupération de la localisation de l'IUT
+                $urlApi = 'https://api-adresse.data.gouv.fr/search/?q=';
+                $address = "IUT Nancy-Charlemagne";
+                $urlApi = $urlApi . str_replace(' ', '+', $address);
+                $geocode = file_get_contents($urlApi);
+                if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
+                    $output = json_decode($geocode);
+                    $lon = $output->features[0]->geometry->coordinates[0];
+                    $lat = $output->features[0]->geometry->coordinates[1];
+                } else {
+                    echo "Erreur de récupération de l'adresse de l'IUT";
+                }
+            } else {
+                echo "Erreur de récupération de la qualité de l'air";
             }
-
             // Affichage de la carte
             $html = <<<HTML
                 <h2 class="ms-4">Carte des parkings velolib de Nancy</h2>
                 <div id="map" style="height: 55vh;" class="ms-5 w-75">
                 </div>
-                <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css" integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ==" crossorigin="" />
                 <link rel="stylesheet" href="./bootstrap.css" />
-                <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js" integrity="sha512-/Nsx9X4HebavoBvEBuyp3I7od5tA0UzAxs+j83KgC8PU0kgB4XiK4Lfe4y4cgBtaRJQEIFCW+oC506aPT2L1zw==" crossorigin=""></script>
+                <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin="" />
+                <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
                 <script>
                     function initMap() {
-                        myMap = L.map('map').setView([$geolocData->lat, $geolocData->lon], 15)
-                        L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+                        const myMap = L.map('map').setView([$geolocData->lat, $geolocData->lon], 15)
+                        L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
                             // Lien vers la source des données
                             attribution: 'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a>',
                         }).addTo(myMap)
@@ -112,7 +134,9 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
                             });
                             L.marker([$lat, $lon], { icon: userIcon }).addTo(myMap)
                         }
-
+                    }
+                    window.onload = function () {
+                        initMap()
                         const jsonAir = $dataAir
                         document.getElementById('conditions').innerHTML += "<h2 class='ms-4'>Qualité de l'air du jour : " + jsonAir.features[0].attributes.lib_qual + "</h2><hr/>"
 
@@ -139,9 +163,6 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
                                 </li>
                             </ul>
                         </div>`
-                    }
-                    window.onload = function () {
-                        initMap()
                     }
                 </script>
                 HTML;
