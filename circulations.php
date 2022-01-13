@@ -1,5 +1,5 @@
 <?php
-stream_context_set_default(array('http' => array('proxy' => 'tcp://www-cache:3128', 'request_fulluri' => true), 'ssl' => array('verify_peer' => false, 'verify_peer_name' => false)));
+//stream_context_set_default(array('http' => array('proxy' => 'tcp://www-cache:3128', 'request_fulluri' => true), 'ssl' => array('verify_peer' => false, 'verify_peer_name' => false)));
 
 $urlApi = 'https://api-adresse.data.gouv.fr/search/?q=';
 $address = "Mairie de Notre-Dame-des-Landes";
@@ -14,20 +14,20 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
 
     $urlApiCirculation = 'https://data.loire-atlantique.fr/api/records/1.0/search/?dataset=224400028_info-route-departementale&q=&lang=fr&rows=50';
     $dataCirculation = file_get_contents($urlApiCirculation);
-    // $dataCirculation = json_decode($dataCirculation);
 
-    $html = <<<HTML
+    if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
+        $html = <<<HTML
             <h1 class="ms-2">Circulations</h1>
             <h2 class="ms-4">Carte des difficultés de circulation dans le département de la Loire Atlantique</h2>
             <div id="map" style="height: 70vh" class="ms-5 w-75">
             </div>
-            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css" integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ==" crossorigin="" />
             <link rel="stylesheet" href="./bootstrap.css" />
-            <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js" integrity="sha512-/Nsx9X4HebavoBvEBuyp3I7od5tA0UzAxs+j83KgC8PU0kgB4XiK4Lfe4y4cgBtaRJQEIFCW+oC506aPT2L1zw==" crossorigin=""></script>
+            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin="" />
+            <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
             <script>
                 function initMap() {
                     myMap = L.map('map').setView([$lat, $lon], 10)
-                    L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+                    L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
                         // Lien vers la source des données
                         attribution: 'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a>',
                     }).addTo(myMap)
@@ -89,7 +89,10 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
                 }
             </script>
         HTML;
-    echo $html;
+        echo $html;
+    } else {
+        echo "Erreur : " . $http_response_header[0];
+    }
 } else {
     echo "Erreur : " . $http_response_header[0];
 }
