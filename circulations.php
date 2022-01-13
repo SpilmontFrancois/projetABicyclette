@@ -1,6 +1,18 @@
 <?php
 //stream_context_set_default(array('http' => array('proxy' => 'tcp://www-cache:3128', 'request_fulluri' => true), 'ssl' => array('verify_peer' => false, 'verify_peer_name' => false)));
 
+function convertCSVtoJSON($file, $delimiter)
+{
+    $data = file($file);
+    $json = array();
+
+    foreach ($data as $row) {
+        $json[] = explode($delimiter, $row);
+    }
+
+    return json_encode($json);
+}
+
 $urlApi = 'https://api-adresse.data.gouv.fr/search/?q=';
 $address = "Mairie de Notre-Dame-des-Landes";
 $urlApi = $urlApi . str_replace(' ', '+', $address);
@@ -16,56 +28,28 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
     $dataCirculation = file_get_contents($urlApiCirculation);
     if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
         $urlApiCovid = 'https://www.data.gouv.fr/fr/datasets/r/5c4e1452-3850-4b59-b11c-3dd51d7fb8b5';
-        $dataCovid = file_get_contents($urlApiCovid);
-        //echo $dataCovid;  // Ca rend bien l'api
+        $dataCovid = file($urlApiCovid);
 
-        function csvtojson($file, $delimiter)
-        {
-            if (($handle = fopen($file, "r")) === false) {
-                die("can't open the file.");
-            }
-
-            $csv_headers = fgetcsv($handle, 4000, $delimiter);
-            $csv_json = array();
-
-            while ($row = fgetcsv($handle, 20480, $delimiter)) {
-                $csv_json[] = array_combine($csv_headers, $row);
-            }
-
-            fclose($handle);
-            return json_encode($csv_json);
+        if ($http_response_header[0] === 'HTTP/1.1 302 FOUND') {
+            $jsonConverted = convertCSVtoJSON($urlApiCovid, ",");
+        } else {
+            echo "Erreur lors de l'accès aux données COVID";
         }
-
-        //$jsonresult = csvtojson($urlApiCovid, ",");
-
-        //echo $jsonresult;   // Ca transforme le CSV en JSON
-
-        function convertCSVtoJSON($file, $delimiter)
-        {
-            $data = file($file);
-            $json = array();
-
-            foreach ($data as $row) {
-                $json[] = explode($delimiter, $row);
-            }
-
-           // print_r($json);
-        }
-
-        convertCSVtoJSON($urlApiCovid, ",");
-
 
         $html = <<<HTML
             <h1 class="ms-2">Circulations</h1>
             <h2 class="ms-4">Carte des difficultés de circulation dans le département de la Loire Atlantique</h2>
             <div id="map" style="height: 70vh" class="ms-5 w-75">
             </div>
+            <div id="covidData"></div>
+            <div id="apiCalls"></div>
             <link rel="stylesheet" href="./bootstrap.css" />
             <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin="" />
             <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
             <script>
                 function initMap() {
-                    myMap = L.map('map', { tap : false }).setView([$lat, $lon], 10)
+                    const myMap = L.map('map', { tap : false }).setView([$lat, $lon], 10)
                     L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
                         // Lien vers la source des données
                         attribution: 'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a>',
@@ -110,17 +94,65 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
                 }
 
                 function initCourbeCovid(){
-                    document.body.innerHTML += `
+                    document.getElementById('covidData').innerHTML = `
                         <hr/>
                         <div class='ms-2'>
                             <h1>Données COVID</h1>
-                            
+                            <canvas id="myChart" class="w-50 h-auto"></canvas>
                         </div>`
+
+                    let json = $jsonConverted
+                    let data = []
+                    json.forEach((elem) => {
+                        if(elem[0] === '01'){
+                            data.push([elem[6], elem[9], elem[12]])
+                        }
+                    })
+                    console.log(data[0]);
+                    const ctx = document.getElementById('myChart').getContext('2d');
+                    Chart.defaults.font.size = 30;
+                    const myChart = new Chart(ctx, {
+                        type: 'radar',
+                        data: {
+                            labels: [
+                              'Taux d\'incidence',
+                              'Hospitalisations',
+                              'Décès hôpital',
+                            ],
+                            datasets: [{
+                              label: 'My First Dataset',
+                              data: ['1','2','3'],
+                              fill: true,
+                              backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                              borderColor: 'rgb(255, 99, 132)',
+                              pointBackgroundColor: 'rgb(255, 99, 132)',
+                              pointBorderColor: '#fff',
+                              pointHoverBackgroundColor: '#fff',
+                              pointHoverBorderColor: 'rgb(255, 99, 132)'
+                            }]
+                        },
+                        options: {
+                            elements: {
+                              line: {
+                                borderWidth: 3
+                              }
+                            },
+                            scales: {
+                                r: {
+                                    pointLabels: {
+                                        font: {
+                                            size: 30
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                    });
                 }
 
                 function initSources(){
                     const address = "<?php echo $address; ?>"
-                        document.body.innerHTML += `
+                        document.getElementById('apiCalls').innerHTML += `
                         <hr/>
                         <div class='ms-2'>
                             <h2>Appels API :</h2>
