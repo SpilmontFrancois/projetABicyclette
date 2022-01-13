@@ -67,6 +67,8 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
                 $output = json_decode($geocode);
                 $lon = $output->features[0]->geometry->coordinates[0];
                 $lat = $output->features[0]->geometry->coordinates[1];
+            } else {
+                echo "Erreur de récupération de l'adresse de l'IUT";
             }
 
             // Affichage de la carte
