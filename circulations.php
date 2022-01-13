@@ -1,5 +1,5 @@
 <?php
-//stream_context_set_default(array('http' => array('proxy' => 'tcp://www-cache:3128', 'request_fulluri' => false)));
+stream_context_set_default(array('http' => array('proxy' => 'tcp://www-cache:3128', 'request_fulluri' => true), 'ssl' => array('verify_peer' => false, 'verify_peer_name' => false)));
 
 $urlApi = 'https://api-adresse.data.gouv.fr/search/?q=';
 $address = "Mairie de Notre-Dame-des-Landes";
