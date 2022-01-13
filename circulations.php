@@ -1,5 +1,5 @@
 <?php
-//stream_context_set_default(array('http' => array('proxy' => 'tcp://www-cache:3128', 'request_fulluri' => true), 'ssl' => array('verify_peer' => false, 'verify_peer_name' => false)));
+stream_context_set_default(array('http' => array('proxy' => 'tcp://www-cache:3128', 'request_fulluri' => true), 'ssl' => array('verify_peer' => false, 'verify_peer_name' => false)));
 
 function convertCSVtoJSON($file, $delimiter)
 {
@@ -96,56 +96,83 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
                 function initCourbeCovid(){
                     document.getElementById('covidData').innerHTML = `
                         <hr/>
-                        <div class='ms-2'>
+                        <div class='ms-4'>
                             <h1>Données COVID</h1>
-                            <canvas id="myChart" class="w-50 h-auto"></canvas>
-                        </div>`
+                            <h3>Courbe du taux d'incidence</h3>
+                            <canvas id="chartIncidence" class="w-50 h-auto mb-2"></canvas>
+                            <hr/>
+                            <h3>Courbe des hospitalisations</h3>
+                            <canvas id="chartHospitalisations" class="w-50 h-auto mb-2"></canvas>
+                            <hr/>
+                            <h3>Courbe des décès</h3>
+                            <canvas id="chartDeads" class="w-50 h-auto"></canvas>
+                        </div>
+                    `
 
                     let json = $jsonConverted
-                    let data = []
+                    let data = [[], [], []]
+                    let labels = []
                     json.forEach((elem) => {
-                        if(elem[0] === '01'){
-                            data.push([elem[6], elem[9], elem[12]])
+                        if (elem[0] === '01') {
+                            data[0].push(elem[6])
+                            data[1].push(elem[9])
+                            data[2].push(elem[12])
+                            labels.push(elem[1])
                         }
                     })
-                    console.log(data[0]);
-                    const ctx = document.getElementById('myChart').getContext('2d');
                     Chart.defaults.font.size = 30;
-                    const myChart = new Chart(ctx, {
-                        type: 'radar',
+
+                    const chart1 = document.getElementById('chartIncidence').getContext('2d');
+                    let myChart = new Chart(chart1, {
+                        type: 'line',
                         data: {
-                            labels: [
-                              'Taux d\'incidence',
-                              'Hospitalisations',
-                              'Décès hôpital',
-                            ],
+                            labels,
                             datasets: [{
-                              label: 'My First Dataset',
-                              data: ['1','2','3'],
+                              label: 'Taux d\'incidence',
+                              data: data[0],
                               fill: true,
-                              backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                              borderColor: 'rgb(255, 99, 132)',
-                              pointBackgroundColor: 'rgb(255, 99, 132)',
-                              pointBorderColor: '#fff',
-                              pointHoverBackgroundColor: '#fff',
-                              pointHoverBorderColor: 'rgb(255, 99, 132)'
+                              backgroundColor: 'rgba(0, 0, 255, 0.5)',
+                              borderColor: 'rgb(0, 0, 255)',
                             }]
                         },
                         options: {
-                            elements: {
-                              line: {
-                                borderWidth: 3
-                              }
-                            },
-                            scales: {
-                                r: {
-                                    pointLabels: {
-                                        font: {
-                                            size: 30
-                                        }
-                                    }
-                                }
-                            }
+                            responsive: true,
+                        },
+                    });
+
+                    const chart2 = document.getElementById('chartHospitalisations').getContext('2d');
+                    myChart = new Chart(chart2, {
+                        type: 'line',
+                        data: {
+                            labels,
+                            datasets: [{
+                              label: 'Hospitalisations',
+                              data: data[1],
+                              fill: true,
+                              backgroundColor: 'rgba(0, 160, 0, 0.5)',
+                              borderColor: 'rgb(0, 160, 0)',
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                        },
+                    });
+
+                    const chart3 = document.getElementById('chartDeads').getContext('2d');
+                    myChart = new Chart(chart3, {
+                        type: 'line',
+                        data: {
+                            labels,
+                            datasets: [{
+                              label: 'Décès',
+                              data: data[2],
+                              fill: true,
+                              backgroundColor: 'rgba(255, 0, 0, 0.5)',
+                              borderColor: 'rgb(255, 0, 0)',
+                            }]
+                        },
+                        options: {
+                            responsive: true,
                         },
                     });
                 }
