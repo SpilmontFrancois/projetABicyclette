@@ -79,9 +79,8 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
                             iconSize: [24, 24],
                         });
                         
-                        // Par magie, ça marche SEULEMENT si on a ce console.log donc pas touche
-                        console.log($jsonDataStations);
-                        $jsonDataStations.forEach((el)=>{
+                        const json = $jsonDataStations
+                        json.forEach((el)=>{
                            L.marker([el.lat[0], el.lng[0]], { icon: parkingIcon }).addTo(myMap)
                            .bindPopup(
                                  "<b>" + el.name[0] + "</b><br>" + el.address[0] + "<br>" + el.bikes[0] + " vélos disponibles<br>" + el.slots[0] + " places disponibles"
