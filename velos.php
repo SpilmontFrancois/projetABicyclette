@@ -59,6 +59,16 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
             $urlQualiteAir = "https://services3.arcgis.com/Is0UwT37raQYl9Jj/arcgis/rest/services/ind_grandest/FeatureServer/0/query?where=lib_zone%3D%27Nancy%27&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&resultType=none&distance=0.0&units=esriSRUnit_Meter&returnGeodetic=false&outFields=*&returnGeometry=true&featureEncoding=esriDefault&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pjson&token=";
             $dataAir = file_get_contents($urlQualiteAir);
 
+            $urlApi = 'https://api-adresse.data.gouv.fr/search/?q=';
+            $address = "IUT Nancy-Charlemagne";
+            $urlApi = $urlApi . str_replace(' ', '+', $address);
+            $geocode = file_get_contents($urlApi);
+            if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
+                $output = json_decode($geocode);
+                $lon = $output->features[0]->geometry->coordinates[0];
+                $lat = $output->features[0]->geometry->coordinates[1];
+            }
+
             // Affichage de la carte
             $html = <<<HTML
                 <h2 class="ms-4">Carte des parkings velolib de Nancy</h2>
@@ -88,15 +98,23 @@ if ($http_response_header[0] === 'HTTP/1.1 200 OK') {
                            )
                         })
 
-                        const jsonAir = $dataAir
-                        document.getElementById('conditions').innerHTML += "<h2 class='ms-4'>Qualité de l'air du jour : " + jsonAir.features[0].attributes.lib_qual + "</h2><hr/>"
-
                         const userIcon = L.icon({
                             iconUrl: './assets/icons/user-solid.svg',
                             iconSize: [24, 24],
                         });
 
                         L.marker([$geolocData->lat, $geolocData->lon], { icon: userIcon }).addTo(myMap)
+
+                        if ($lat && $lon){
+                            const userIcon = L.icon({
+                                iconUrl: './assets/icons/graduation-cap-solid.svg',
+                                iconSize: [24, 24],
+                            });
+                            L.marker([$lat, $lon], { icon: userIcon }).addTo(myMap)
+                        }
+
+                        const jsonAir = $dataAir
+                        document.getElementById('conditions').innerHTML += "<h2 class='ms-4'>Qualité de l'air du jour : " + jsonAir.features[0].attributes.lib_qual + "</h2><hr/>"
 
                         const coo = "<?php echo $coo; ?>"
                         document.body.innerHTML += `
